@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Mac
+.DS_Store
+
+# dbt
+dbt/logs/
+dbt/tfl_dbt/target/
+dbt/tfl_dbt/dbt_packages/
