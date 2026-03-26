@@ -1,24 +1,81 @@
 # TFL Live Disruptions Pipeline
 
-A real-time data pipeline ingesting live TFL tube status data every 60 seconds.
+A real-time data pipeline that ingests live TFL tube status data every 60 seconds, transforms it with dbt, and stores it in PostgreSQL for analysis.
 
-## Pipeline Architecture
+## System Architecture
 ```
-TFL API (every 60s) → Python ETL → PostgreSQL → dbt models → Snowflake/Databricks
+┌─────────────────────────────────────────────────────────┐
+│                    DATA SOURCES                          │
+│         TFL API (api.tfl.gov.uk/line/mode/tube)         │
+└─────────────────────────┬───────────────────────────────┘
+                          │ Every 60 seconds
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                  INGESTION LAYER                         │
+│                                                          │
+│   extract.py → transform.py → load.py                   │
+│   (Python ETL running inside Docker container)           │
+└─────────────────────────┬───────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                   STORAGE LAYER                          │
+│                                                          │
+│         PostgreSQL (tfl_live_disruption_db)              │
+│         Table: tfl_disruptions                           │
+└─────────────────────────┬───────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│               TRANSFORMATION LAYER (dbt)                 │
+│                                                          │
+│   staging/                                               │
+│   └── stg_tfl_disruptions (view)                        │
+│       └── cleaned + severity categories                  │
+│                                                          │
+│   intermediate/                                          │
+│   └── int_tfl_disruptions (view)                        │
+│       └── aggregated by hour                             │
+│                                                          │
+│   mart/                                                  │
+│   ├── mart_line_status_summary (table)                   │
+│   └── mart_disruptions_by_hour (table)                   │
+└─────────────────────────┬───────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│               ANALYTICS LAYER (coming soon)              │
+│                                                          │
+│         Snowflake / Databricks                           │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ## Tech Stack
-- **Python** — extract, transform, load
-- **PostgreSQL** — raw data storage
-- **dbt** — staging, intermediate, mart models
-- **Docker** — containerised pipeline
-- **Snowflake/Databricks** — cloud analytics (coming soon)
+
+| Layer | Tool |
+|---|---|
+| Ingestion | Python (requests, psycopg2, pandas) |
+| Storage | PostgreSQL |
+| Transformation | dbt |
+| Containerisation | Docker |
+| Cloud Analytics | Snowflake / Databricks (planned) |
 
 ## dbt Models
-- `stg_tfl_disruptions` — staged raw data with severity categories
-- `int_tfl_disruptions` — aggregated by hour
-- `mart_line_status_summary` — line status summary table
-- `mart_disruptions_by_hour` — disruptions trend by hour
+
+| Model | Type | Description |
+|---|---|---|
+| stg_tfl_disruptions | View | Cleaned raw data with severity categories |
+| int_tfl_disruptions | View | Aggregated by hour |
+| mart_line_status_summary | Table | Line status summary |
+| mart_disruptions_by_hour | Table | Disruption trends by hour |
+
+## Pipeline Flow
+```
+1. extract.py  — hits TFL API, returns raw JSON
+2. transform.py — extracts line_id, name, status, severity, timestamp
+3. load.py     — inserts records into PostgreSQL
+4. main.py     — runs the loop every 60 seconds
+```
 
 ## Running Locally
 ```bash
@@ -37,4 +94,21 @@ docker run -d --name tfl-pipeline \
   tfl-pipeline
 ```
 
-## Data collected since: March 2026
+## dbt Commands
+```bash
+cd dbt/tfl_dbt
+dbt run       # run all models
+dbt test      # run all tests (11 tests)
+dbt docs generate && dbt docs serve  # view DAG
+```
+
+## Data Collected
+
+- **Started:** March 2026
+- **Frequency:** Every 60 seconds
+- **Lines tracked:** 11 tube lines
+- **Records per hour:** ~660
+
+## Author
+
+Daud Abdi — github.com/Daudsaid
