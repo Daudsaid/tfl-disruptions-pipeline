@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: stg_tfl_disruptions
+    description: "Staged TFL tube line disruption data"
+    columns:
+      - name: id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: line_id
+        description: "Tube line identifier"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['bakerloo', 'central', 'circle', 'district', 'hammersmith-city', 'jubilee', 'metropolitan', 'northern', 'piccadilly', 'victoria', 'waterloo-city']
+      - name: status
+        tests:
+          - not_null
+      - name: severity
+        tests:
+          - not_null
+      - name: recorded_at
+        tests:
+          - not_null

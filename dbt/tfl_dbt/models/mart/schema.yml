@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: mart_line_status_summary
+    description: "Summary of line status by severity category"
+    columns:
+      - name: line_name
+        tests:
+          - not_null
+      - name: severity_category
+        tests:
+          - not_null
+
+  - name: mart_disruptions_by_hour
+    description: "Disruptions aggregated by hour"
+    columns:
+      - name: hour
+        tests:
+          - not_null
+          - unique
