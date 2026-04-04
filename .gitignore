@@ -1,12 +1,26 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
 .venv/
+venv/
+*.egg-info/
 
-# Mac
-.DS_Store
+# Lambda build artifacts
+lambda/package/
+lambda.zip
 
 # dbt
-dbt/logs/
 dbt/tfl_dbt/target/
+dbt/tfl_dbt/logs/
 dbt/tfl_dbt/dbt_packages/
+
+# macOS
+.DS_Store
+
+# Environment
+.env
+*.env
+
+# AWS
+*.pem

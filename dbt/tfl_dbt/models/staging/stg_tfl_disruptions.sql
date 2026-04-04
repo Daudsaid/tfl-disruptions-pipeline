@@ -1,5 +1,5 @@
 with source as (
-    select * from {{ source('public', 'tfl_disruptions') }}
+    select * from {{ source('tfl_aws', 'tfl_disruptions') }}
 ),
 
 staged as (
